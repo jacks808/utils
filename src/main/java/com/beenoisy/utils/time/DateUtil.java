@@ -24,8 +24,10 @@
  */
 package com.beenoisy.utils.time;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -35,8 +37,12 @@ import java.util.Date;
  * @author jacks808@163.com<br>
  */
 public final class DateUtil {
+    /**
+     * @Deprecated 特别说明，SimpleDateFormat不是线程安全的。。。
+     */
+    public static final DateFormat FORMAT_YYYYMMDD = new SimpleDateFormat("yyyy-MM-dd");
     private static final String DEFAULT_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private static final SimpleDateFormat formater = new SimpleDateFormat(DEFAULT_PATTERN);
+    private static final SimpleDateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat(DEFAULT_PATTERN);
 
     private DateUtil() {
     }
@@ -51,7 +57,7 @@ public final class DateUtil {
      * @return
      */
     public static String date2Str(Date date) {
-        return formater.format(date);
+        return DEFAULT_DATE_FORMAT.format(date);
     }
 
     /**
@@ -65,7 +71,7 @@ public final class DateUtil {
      */
     public static Date str2Date(String dateString) {
         try {
-            return formater.parse(dateString);
+            return DEFAULT_DATE_FORMAT.parse(dateString);
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
@@ -93,5 +99,75 @@ public final class DateUtil {
      */
     public static String getFormate() {
         return DEFAULT_PATTERN;
+    }
+
+    // 一天等于多少毫秒
+    public static final int ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+    // public static Date getDateStart(Date date) {
+    // Date s = new Date(date.getTime());
+    // s.setHours(0);
+    // s.setMinutes(0);
+    // s.setSeconds(0);
+    //
+    // return s;
+    // }
+
+    public static Date getDateEnd(Date date) {
+        Date s = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+        return s;
+    }
+
+    /**
+     * 
+     */
+    public static String getTodayYYYYMMDD() {
+        return new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+    }
+
+    public static String getTomorrowYYYYMMDD() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+
+        return new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
+    }
+
+    /**
+     * 获取当天剩余的时间（秒），剩余0秒时按剩余1秒处理，因为0秒在缓存中是“不超时”的意思
+     * 
+     * @return
+     */
+    public static int getTodayLeftSec() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+
+        int leftSec = (int) ((cal.getTimeInMillis() - System.currentTimeMillis()) / 1000);
+        return leftSec == 0 ? 1 : leftSec;
+    }
+
+    /**
+     * 判断莫个日期是否在“今天”，用于跟据不同的日期进行不同的格式化
+     * 
+     * @param date
+     * @return
+     */
+    public static boolean isCurrentDay(Date date) {
+        try {
+            if (date == null) {
+                return false;
+            }
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+            Date current = new Date();
+            if (df.format(current).equals(df.format(date))) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
